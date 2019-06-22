@@ -40,7 +40,7 @@ namespace QuaternionExtensions {
 
         public static Quaternion Log(this Quaternion q)
         {
-            float exp_w = Norm(q);
+            float exp_w = q.Norm();
             float w = Mathf.Log(exp_w);
             float a = Mathf.Acos(q.w / exp_w);
 
@@ -128,11 +128,9 @@ namespace DualQuaternions {
         public DualQuaternion(Vector3 aPosition, Quaternion aRotation)
         {
             var v = 0.5f * aPosition;
-            var q1 = new DualQuaternion(new Quaternion(0f, 0f, 0f, 1f), new Quaternion(v.x, v.y, v.z, 0f));
-            var q2 = new DualQuaternion(aRotation, new Quaternion(0f, 0f, 0f, 0f));
-            var q = q1 * q2;
-            Real = q.Real;
-            Dual = q.Dual;
+            var q = new Quaternion(v.x, v.y, v.z, 0f);
+            Real = aRotation;
+            Dual = q * aRotation;
         }
 
 
@@ -149,7 +147,7 @@ namespace DualQuaternions {
         {
             return new DualQuaternion(
                 A.Real * B.Real,
-                (A.Dual * B.Real).Add(B.Dual * A.Real)
+                (A.Real * B.Dual).Add(A.Dual * B.Real)
             );
         }
 
@@ -239,7 +237,7 @@ namespace DualQuaternions {
 
         public DualQuaternion Sclerp(DualQuaternion Other, float t)
         {
-            return (this * (Conjugate * Other).Pow(t)).Normalized;
+            return ((Other * Conjugate).Pow(t) * this).Normalized;
         }
     }
 }

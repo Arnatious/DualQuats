@@ -6,8 +6,8 @@ using UnityEngine;
 
 public class Sclerp : MonoBehaviour
 {
-    public List<Transform> Waypoints;
-    public List<float> times;
+    public Transform Targets;
+    public List<float> TimeStamps;
 
     [SerializeField]
     private float param, adjParam;
@@ -19,10 +19,10 @@ public class Sclerp : MonoBehaviour
 
     void Start()
     {
-        transform.position = Waypoints[0].position;
-        transform.rotation = Waypoints[0].rotation;
-
-        foreach (var tf in Waypoints)
+        transform.position = Targets.position;
+        transform.rotation = Targets.rotation;
+        dualQuaternions.Add(new DualQuaternion(transform.position, transform.rotation));
+        foreach (Transform tf in Targets)
         {
             var dq = new DualQuaternion(tf.position, tf.rotation);
             dualQuaternions.Add(dq);
@@ -32,21 +32,21 @@ public class Sclerp : MonoBehaviour
     void Update()
     {
         float elapsed = Time.time;
-        param = elapsed % times.Last();
+        param = elapsed % TimeStamps.Last();
 
-        if (param < times[0])
+        if (param < TimeStamps[0])
         {
             paramInd = 0;
             paramNext = 1;
-            adjParam = param / times[0];
+            adjParam = param / TimeStamps[0];
             
         }
         else
         {
-            paramInd = times.BinarySearch(param);
+            paramInd = TimeStamps.BinarySearch(param);
             paramInd = paramInd < 0 ? ~paramInd : paramInd;
             paramNext = paramInd + 1;
-            adjParam = (param - times[paramInd - 1]) / (times[paramInd] - times[paramInd - 1]);
+            adjParam = (param - TimeStamps[paramInd - 1]) / (TimeStamps[paramInd] - TimeStamps[paramInd - 1]);
         }
 
         var res = dualQuaternions[paramInd].Sclerp(dualQuaternions[paramNext], adjParam);
